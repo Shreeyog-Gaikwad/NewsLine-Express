@@ -1,63 +1,109 @@
-import React, { Component } from 'react'
-import NewsItem from './NewsItem'
+import React, {useEffect, useState} from "react";
+import NewsItem from "./NewsItem";
+import Spinner from "./Spinner";
+import PropTypes from "prop-types";
 
-export class News extends Component {
+const News = (props) => {
 
-    articles = [
-        {
-          "source": { "id": "news-com-au", "name": "News.com.au" },
-          "author": null,
-          "title": "Mitchell Johnson sacked over Warner column",
-          "description": "Mitchell Johnson’s scathing personal attack on former teammate David Warner resulted in him being stood down from two speaking functions by Cricket Australia.",
-          "url": "https://www.news.com.au/sport/cricket/mitchell-johnson-sacked-over-david-warner-column/news-story/33e2c775dfa3896f18346ae26ead57de",
-          "urlToImage": "https://content.api.news/v3/images/bin/2d1a7de9f3a965b28a0bb79ac58db0a4",
-          "publishedAt": "2023-12-19T02:56:00Z",
-          "content": "Mitchell Johnson’s scathing personal attack on former teammate David Warner resulted in him being stood down from two speaking functions by Cricket Australia.\r\nNews Corp reports the former left-arm q… [+3552 chars]"
-        },
-        {
-          "source": { "id": "espn-cric-info", "name": "ESPN Cric Info" },
-          "author": null,
-          "title": "PCB hands Umar Akmal three-year ban from all cricket | ESPNcricinfo.com",
-          "description": "Penalty after the batsman pleaded guilty to not reporting corrupt approaches | ESPNcricinfo.com",
-          "url": "http://www.espncricinfo.com/story/_/id/29103103/pcb-hands-umar-akmal-three-year-ban-all-cricket",
-          "urlToImage": "https://a4.espncdn.com/combiner/i?img=%2Fi%2Fcricket%2Fcricinfo%2F1099495_800x450.jpg",
-          "publishedAt": "2020-04-27T11:41:47Z",
-          "content": "Umar Akmal's troubled cricket career has hit its biggest roadblock yet, with the PCB handing him a ban from all representative cricket for three years after he pleaded guilty of failing to report det… [+1506 chars]"
-        },
-        {
-          "source": { "id": "espn-cric-info", "name": "ESPN Cric Info" },
-          "author": null,
-          "title": "What we learned from watching the 1992 World Cup final in full again | ESPNcricinfo.com",
-          "description": "Wides, lbw calls, swing - plenty of things were different in white-ball cricket back then | ESPNcricinfo.com",
-          "url": "http://www.espncricinfo.com/story/_/id/28970907/learned-watching-1992-world-cup-final-full-again",
-          "urlToImage": "https://a4.espncdn.com/combiner/i?img=%2Fi%2Fcricket%2Fcricinfo%2F1219926_1296x729.jpg",
-          "publishedAt": "2020-03-30T15:26:05Z",
-          "content": "Last week, we at ESPNcricinfo did something we have been thinking of doing for eight years now: pretend-live ball-by-ball commentary for a classic cricket match. We knew the result, yes, but we tried… [+6823 chars]"
-        }
-]
+  const[articles,setArticles] = useState([]);
+  const[loading,setLoading] = useState(true);
+  const[page,setPage] = useState(1);
+  const[totalResults,settotalResults] = useState(0);
 
-constructor()
-{
-  super();
-  this.state={
-      articles : this.articles,
-      loading : false
+  const capitalize = (s) => {
+    return s[0].toUpperCase() + s.slice(1);
   }
-}
-  render() {
+
+  const updateNews = async () => {
+    props.setProgress(10);
+    const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=3a3bccea7bf9445aa8f89dd63eec8b2c&pagesize=${props.pagesize}`;
+    setLoading(true);
+    let data = await fetch(url);
+    props.setProgress(30);
+    let parseData = await data.json();
+    props.setProgress(70);
+    setArticles(parseData.articles);
+    settotalResults(parseData.totalResults);
+    setLoading(false);
+    props.setProgress(100);
+  }
+
+  useEffect(()=> {
+    updateNews();
+    document.title = `NewsLine Express - ${capitalize(props.category)}`;
+    //eslint-disable-next-line
+  },[])
+
+  //const handlePrevClick = async () => {
+  //  props.setProgress(10);
+  //  const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=3a3bccea7bf9445aa8f89dd63&//pagesize=${props.pagesize}`;
+  //  setLoading(true);
+  //  let data = await fetch(url);
+  //  props.setProgress(30);
+  //  let parseData = await data.json();
+  //  props.setProgress(70);
+  //  setArticles(parseData.articles);
+  //  settotalResults(parseData.totalResults);
+  //  setLoading(false);
+  //  props.setProgress(100);
+  //  setPage(page-1);
+  //}
+  
+  //const handleNextClick = async () => {
+  //  if((page+1) < Math.ceil(totalResults/props.pagesize))
+  //  {
+  //    console.log("Next");
+  //    props.setProgress(10);
+  //    const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=3a3bccea7bf9445aa8f89dd63
+  //    &page=${page+1}&pagesize=${props.pagesize}`;
+  //    setLoading(true);
+  //    let data = await fetch(url);
+  //    props.setProgress(30);
+  //    let parseData = await data.json();
+  //    props.setProgress(70);
+  //    setArticles(parseData.articles);
+  //    settotalResults(parseData.totalResults);
+  //    setLoading(false);
+  //    props.setProgress(100);
+  //    setPage(page+1);
+  //  }
+  //}
+
     return (
-      <div className='container my-3'>
-        <h2>NewsLine Express - Top Headlines</h2>
-        <div className="row">
-          {this.state.articles.map((element) => {
-            return <div className="col-md-4" key={element.url}>
-            <NewsItem title={element.title} description={element.description.slice(0, 88)} imgUrl={element.urlToImage} newsUrl={element.url}/>
-            </div>
-          })}
-        </div>
+      <div className="container my-3">
+        <h2 className="text-center" style={{marginTop:"80px", marginBottom: "20px"}} >
+          NewsLine Express - Top {capitalize(props.category)}{" "}
+          Headlines
+        </h2>
+        {loading && <Spinner />}
+          <div className="container row">
+            {articles.map((element) => {
+                return (
+                  <div className="col-md-4" key={element.url}>
+                    <NewsItem  togglemode={props.togglemode} title={element.title ? element.title : " "} description={element.description ? element.description : " "}
+                      imgUrl={element.urlToImage? element.urlToImage: "https://lgbti-era.org/wp-content/uploads/2023/01/no-image.png"} newsUrl={element.url} date={element.publishedAt} author={element.author} source={element.source.name} />
+                  </div>
+                );
+              })}
+          </div>
+        {/*<div className="container d-flex justify-content-between">
+                    <button disabled={page <= 1} type="button" className="btn btn-dark" onClick={handlePrevClick}> &larr; Previous</button>
+                    <button disabled={(page + 1) > Math.ceil(totalResults / props.pagesize)} type="button" className="btn btn-dark" onClick={handleNextClick}>Next &rarr;</button>
+            </div>*/}
       </div>
-    )
-  }
+    );
 }
 
-export default News
+News.defaultProps = {
+  country: "in",
+  category: "general",
+  pagesize: "15",
+};
+
+News.propTypes = {
+  country: PropTypes.string,
+  category: PropTypes.string,
+  pagesize: PropTypes.number,
+};
+
+export default News;
